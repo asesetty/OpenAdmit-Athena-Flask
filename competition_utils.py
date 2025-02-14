@@ -41,7 +41,7 @@ def generate_project_guidance(student_info, conversation):
         "You are Athena, a friendly college counselor specializing in helping students develop "
         "award-winning science project ideas. Provide a detailed, innovative, unique project idea "
         "suitable for ISEF-level competitions, including proposed methods, specific datasets if relevant, "
-        "and tailor it to the student's profile. Use a conversational tone and format your response in Markdown."
+        "and tailor it to the student's profile. Use a conversational tone."
     )
 
     # Updated to reflect new student data structure
@@ -74,7 +74,7 @@ def generate_deca_guidance(student_info, conversation):
     system_prompt = (
         "You are Athena, an expert in DECA competitions. Provide guidance on how the student can "
         "prepare for DECA, including recommended practice materials, strategies for role-plays or written events, "
-        "and advice based on the student's profile. Use a friendly, conversational tone, and Markdown formatting."
+        "and advice based on the student's profile. Use a friendly, conversational tone."
     )
 
     # Updated to reflect new student data structure
