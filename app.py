@@ -43,7 +43,7 @@ def get_or_create_user_session(student_id):
 def _chat_with_athena(student_info, conversation, conversation_summary):
     messages_for_model = generate_messages(student_info, conversation, conversation_summary)
     response = openai.ChatCompletion.create(
-        model="gpt-4",
+        model="gpt-4o",
         messages=messages_for_model,
         max_tokens=300,
         temperature=0.8
