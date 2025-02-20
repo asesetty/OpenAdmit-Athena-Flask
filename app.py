@@ -23,7 +23,7 @@ from mentor_utils import (
 app = Flask(__name__)
 CORS(app)  # Enable CORS for production environments
 
-openai.api_key = "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"
+openai.api_key = "Add here"
 app.secret_key = "IshaanIs2Freaky"
 
 user_sessions = {}
