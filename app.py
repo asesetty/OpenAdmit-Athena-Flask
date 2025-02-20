@@ -1,6 +1,7 @@
 import os
 import openai
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 from db_utils import load_students_data, save_students_data
 from conversation_utils import (
     optimize_conversation_history,
@@ -20,10 +21,10 @@ from mentor_utils import (
 )
 
 app = Flask(__name__)
+CORS(app)  # Enable CORS for production environments
 
-
-openai.api_key = "ADD HERE"
-app.secret_key = "athena123"
+openai.api_key = "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"
+app.secret_key = "IshaanIs2Freaky"
 
 user_sessions = {}
 
@@ -42,7 +43,7 @@ def get_or_create_user_session(student_id):
 
 def _chat_with_athena(student_info, conversation, conversation_summary):
     messages_for_model = generate_messages(student_info, conversation, conversation_summary)
-    response = openai.ChatCompletion.create(
+    response = openai.chat.completions.create(
         model="gpt-4o",
         messages=messages_for_model,
         max_tokens=300,
@@ -51,12 +52,11 @@ def _chat_with_athena(student_info, conversation, conversation_summary):
     return response.choices[0].message.content.strip()
 
 
-# Student Creation/Update Endpoint
 @app.route('/api/student', methods=['POST'])
 def create_or_update_student():
     data = request.get_json()
 
-    student_id = data.get('name', '').strip()  # Or some other logic for unique ID
+    student_id = data.get('name', '').strip()  # Use name as a unique ID (adjust if needed)
     if not student_id:
         return jsonify({"error": "Name is required"}), 400
 
@@ -71,21 +71,16 @@ def create_or_update_student():
             'unique_something': data.get('unique_something', ''),
             'current_extracurriculars': data.get('current_extracurriculars', ''),
             'favorite_courses': data.get('favorite_courses', ''),
-
-            # Additional fields for ongoing data
             'competitions': [],
             'notes': []
         }
     else:
-        for key in [
-            'grade', 'future_study', 'deep_interest', 'unique_something',
-            'current_extracurriculars', 'favorite_courses'
-        ]:
+        for key in ['grade', 'future_study', 'deep_interest', 'unique_something',
+                    'current_extracurriculars', 'favorite_courses']:
             if key in data:
                 students_data[student_id][key] = data[key]
 
     save_students_data(students_data)
-
     get_or_create_user_session(student_id)
 
     return jsonify({
@@ -94,19 +89,14 @@ def create_or_update_student():
     })
 
 
-# Conversation Starters Endpoint
 @app.route('/api/starters/<student_id>', methods=['GET'])
 def get_conversation_starters(student_id):
-    """
-    Returns an array of suggested conversation starters based on the student's info.
-    """
     students_data = load_students_data()
 
     if student_id not in students_data:
         return jsonify({"error": "Student not found"}), 404
 
     student_info = students_data[student_id]
-    # We can pass an empty list or the existing conversation from the user session
     session_data = get_or_create_user_session(student_id)
     conversation = session_data['conversation']
 
@@ -114,17 +104,8 @@ def get_conversation_starters(student_id):
     return jsonify({"starters": starters})
 
 
-# Chat/Conversation Endpoint
 @app.route('/api/chat', methods=['POST'])
 def chat():
-    """
-    Expects JSON with:
-      {
-        "student_id": "...",
-        "message": "User's message"
-      }
-    Returns the system's updated conversation or the AI's response in JSON form.
-    """
     data = request.get_json()
     student_id = data.get('student_id', '').strip()
     user_message = data.get('message', '').strip()
@@ -134,29 +115,24 @@ def chat():
     if not user_message:
         return jsonify({"error": "message is required"}), 400
 
-    # Load or create user session data
     session_data = get_or_create_user_session(student_id)
     conversation = session_data['conversation']
     conversation_summary = session_data['conversation_summary']
 
-    # Retrieve or confirm we have the student's info
     students_data = load_students_data()
     if student_id not in students_data:
         return jsonify({"error": "Student not found"}), 404
 
     student_info = students_data[student_id]
 
-    # Append user's message
+    # Append the user's message to the conversation
     conversation.append({'role': 'user', 'content': user_message})
-
-    # Possibly optimize conversation
     conversation, conversation_summary = optimize_conversation_history(conversation, conversation_summary)
 
-    # Check for special competition requests
+    # Check for specific competition requests
     is_science_request = detect_science_project_request(user_message)
     is_deca_request = detect_deca_request(user_message)
 
-    # If in the clarifying stage for science project
     if session_data['science_project_stage'] == "clarifying":
         session_data['science_project_stage'] = "generate"
         conversation.append({
@@ -167,7 +143,6 @@ def chat():
         conversation.append({'role': 'assistant', 'content': project_idea})
         session_data['science_project_stage'] = "none"
 
-    # If in the clarifying stage for DECA
     elif session_data['deca_stage'] == "clarifying":
         session_data['deca_stage'] = "generate"
         conversation.append({
@@ -178,7 +153,6 @@ def chat():
         conversation.append({'role': 'assistant', 'content': deca_advice})
         session_data['deca_stage'] = "none"
 
-    # If new science project request triggers
     elif is_science_request:
         session_data['science_project_stage'] = "clarifying"
         clarifying_msg = (
@@ -187,7 +161,6 @@ def chat():
         )
         conversation.append({'role': 'assistant', 'content': clarifying_msg})
 
-    # If new DECA request triggers
     elif is_deca_request:
         session_data['deca_stage'] = "clarifying"
         clarifying_msg = (
@@ -196,7 +169,6 @@ def chat():
         )
         conversation.append({'role': 'assistant', 'content': clarifying_msg})
 
-    # Otherwise, normal AI response
     else:
         assistant_message = _chat_with_athena(student_info, conversation, conversation_summary)
         conversation.append({'role': 'assistant', 'content': assistant_message})
@@ -218,11 +190,9 @@ def chat():
                     conversation.append({'role': 'assistant', 'content': recommendation_text})
                     session_data['mentor_cooldown'] = 5
 
-    # Update conversation summary in session
     session_data['conversation'] = conversation
     session_data['conversation_summary'] = conversation_summary
 
-    # Return entire conversation or just the last response
     return jsonify({
         "conversation": conversation,
         "last_response": conversation[-1]['content']
