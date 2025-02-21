@@ -105,6 +105,14 @@ def get_conversation_starters(student_id):
     starters = generate_conversation_starters(student_info, conversation)
     return jsonify({"starters": starters})
 
+@app.route('/api/chat', methods=['OPTIONS'])
+def handle_options():
+    response = jsonify({"message": "CORS preflight request handled"})
+    response.headers.add("Access-Control-Allow-Origin", "https://open-admit-ai.vercel.app")
+    response.headers.add("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+    response.headers.add("Access-Control-Allow-Headers", "Content-Type, Authorization")
+    response.headers.add("Access-Control-Allow-Credentials", "true")
+    return response
 
 @app.route('/api/chat', methods=['POST'])
 def chat():
