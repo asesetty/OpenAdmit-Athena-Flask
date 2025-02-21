@@ -21,7 +21,9 @@ from mentor_utils import (
 )
 
 app = Flask(__name__)
-CORS(app)  # Enable CORS for production environments
+CORS(app, resources={r"/api/*": {"origins": ["https://open-admit-ai.vercel.app", "http://localhost:3000"]}}, 
+     supports_credentials=True, 
+     methods=["GET", "POST", "OPTIONS", "DELETE", "PUT"])
 
 openai.api_key = "Add here"
 app.secret_key = "IshaanIs2Freaky"
