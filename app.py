@@ -31,7 +31,7 @@ if not openai.api_key:
 # Flask app setup
 app = Flask(__name__)
 app.secret_key = SECRET_KEY
-CORS(app, resources={r"/api/*": {"origins": ["https://open-admit-ai.vercel.app", "http://localhost:5000"]}},
+CORS(app, resources={r"/api/*": {"origins": ["https://open-admit-ai.vercel.app", "http://localhost:3000", "http://localhost:3001"]}},
      supports_credentials=True,
      methods=["GET", "POST", "OPTIONS"])
 
@@ -225,4 +225,4 @@ def chat():
 
 # Run Flask app
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host='0.0.0.0', port=3000, debug=True)
