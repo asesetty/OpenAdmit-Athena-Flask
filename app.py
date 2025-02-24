@@ -31,7 +31,7 @@ if not openai.api_key:
 # Flask app setup
 app = Flask(__name__)
 app.secret_key = SECRET_KEY
-CORS(app, resources={r"/api/*": {"origins": ["https://open-admit-ai.vercel.app", "http://localhost:3000", "http://localhost:3001"]}},
+CORS(app, resources={r"/api/*": {"origins": ["https://open-admit-ai.vercel.app", "http://localhost:5000"]}},
      supports_credentials=True,
      methods=["GET", "POST", "OPTIONS"])
 
@@ -110,9 +110,23 @@ def get_conversation_starters(student_id):
     try:
         student_id = student_id.strip().lower()
         students_data = load_students_data()
+        print(students_data, student_id)
+        if student_id not in students_data:
+            students_data[student_id] = {
+                'name': '',
+                'grade': '',
+                'future_study': '',
+                'deep_interest': '',
+                'unique_something': '',
+                'current_extracurriculars': '',
+                'favorite_courses': '',
+                'competitions': [],
+                'notes': []
+            }
 
         if student_id not in students_data:
             return jsonify({"error": "Student not found"}), 404
+
 
         student_info = students_data[student_id]
         session_data = get_or_create_user_session(student_id)
@@ -225,4 +239,4 @@ def chat():
 
 # Run Flask app
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=3000, debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=True)
