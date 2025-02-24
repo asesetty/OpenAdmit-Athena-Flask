@@ -1,19 +1,64 @@
 {
-  "Alex Johnson": {
+  "alex johnson": {
     "name": "Alex Johnson",
     "grade": "10",
-    "coursework": "Math, Comp Sci",
-    "favorite_subjects": "Math",
-    "in_school_orgs": "Debate, DECA",
-    "out_of_school": "Violin",
-    "hobbies": "Art",
-    "care_about": "N/A",
-    "values": "Curiosity, Learning, Problem-solving",
+    "future_study": "Comp Sci, i like building things, interested in machine learning",
+    "deep_interest": "Chess, interested in creating a chess engine using machine learning",
+    "unique_something": "I play violin",
+    "current_extracurriculars": "DECA, soccer",
+    "favorite_courses": "math",
+    "competitions": [
+      "DECA"
+    ],
+    "notes": [
+      "Interested in creating a machine learning-based chess engine for move prediction and analysis.",
+      "Knows some Python."
+    ],
+    "interdisciplinary_interests": [
+      "Music and Machine Learning Projects",
+      "Algorithmic Composition",
+      "Digital Signal Processing"
+    ],
+    "extracurricular_initiative": "Starting a club that explores the intersection of music and technology",
+    "application_strategy": "Highlighting interdisciplinary skills in college essays"
+  },
+  "ish jain": {
+    "name": "Ish Jain",
+    "grade": "11",
+    "future_study": "Biology -- I am passionate about the field of medicine.",
+    "deep_interest": "Piano -- I like to play bollywood music on the piano.",
+    "unique_something": "I am gay.",
+    "current_extracurriculars": "Tennis, Piano, Debate, DECA",
+    "favorite_courses": "AP Chemistry, Biology",
+    "competitions": [],
+    "notes": [],
+    "interests": [
+      "biotech",
+      "science fair project"
+    ],
+    "project_ideas": [
+      "Biotechnology projects such as genetic engineering in agriculture, bioremediation, disease detection using CRISPR, bioinformatics, synthetic biology, and drug development.",
+      "Connecting music, specifically Bollywood music, with biological and chemical processes."
+    ],
+    "course_consideration": [
+      "AP Human Geography",
+      "AP Psychology",
+      "Honors History Classes"
+    ]
+  },
+  "anjan sesetty": {
+    "name": "Anjan Sesetty",
+    "grade": "10",
+    "future_study": "Not sure",
+    "deep_interest": "Chess",
+    "unique_something": "IDK",
+    "current_extracurriculars": "Tennis, Chess",
+    "favorite_courses": "math",
     "competitions": [],
     "notes": []
   },
-  "JohnDoe": {
-    "name": "JohnDoe",
+  "random person": {
+    "name": "Random Person",
     "grade": "10",
     "future_study": "N/A",
     "deep_interest": "N/A",
@@ -23,7 +68,18 @@
     "competitions": [],
     "notes": []
   },
-  "John Doe": {
+  "johndoe": {
+    "name": "John Doe",
+    "grade": "10",
+    "future_study": "N/A",
+    "deep_interest": "N/A",
+    "unique_something": "N/A",
+    "current_extracurriculars": "N/A",
+    "favorite_courses": "N/A",
+    "competitions": [],
+    "notes": []
+  },
+  "JohnDoe": {
     "name": "John Doe",
     "grade": "10",
     "future_study": "N/A",
