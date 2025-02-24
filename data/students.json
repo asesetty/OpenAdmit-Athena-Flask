@@ -89,5 +89,16 @@
     "favorite_courses": "N/A",
     "competitions": [],
     "notes": []
+  },
+  "john doe": {
+    "name": "John Doe",
+    "grade": "10",
+    "future_study": "N/A",
+    "deep_interest": "N/A",
+    "unique_something": "N/A",
+    "current_extracurriculars": "N/A",
+    "favorite_courses": "N/A",
+    "competitions": [],
+    "notes": []
   }
 }
