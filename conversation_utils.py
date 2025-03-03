@@ -1,9 +1,28 @@
 import openai
 import bleach
 import markdown2
+import json
 
 CONVERSATION_SUMMARIZE_THRESHOLD = 8
 SUMMARIZER_MODEL = "gpt-3.5-turbo"
+
+import re
+
+def detect_goal_creation(assistant_message):
+    """Detects if Athena's response suggests a goal."""
+    goal_patterns = [
+        r"you should try to (.+)",
+        r"it would be great if you could (.+)",
+        r"consider working on (.+)",
+        r"maybe set a goal to (.+)"
+    ]
+
+    for pattern in goal_patterns:
+        match = re.search(pattern, assistant_message, re.IGNORECASE)
+        if match:
+            return match.group(1).strip()
+
+    return None  # No goal detected
 
 def summarize_conversation(conversation):
     text_to_summarize = ""
@@ -28,15 +47,34 @@ def summarize_conversation(conversation):
     summary = response.choices[0].message.content.strip()
     return summary
 
-def optimize_conversation_history(conversation, conversation_summary):
-    if len(conversation) > CONVERSATION_SUMMARIZE_THRESHOLD:
-        new_summary = summarize_conversation(conversation)
-        if conversation_summary:
-            conversation_summary += " " + new_summary
-        else:
-            conversation_summary = new_summary
-        conversation = conversation[-2:]
-    return conversation, conversation_summary
+
+def optimize_conversation_history(conversation, current_summary, threshold=5):
+    if len(conversation) >= threshold:
+        # Concatenate the conversation messages into one text
+        convo_text = "\n".join([f"{msg['role']}: {msg['content']}" for msg in conversation])
+        prompt = (
+            "Summarize the following conversation concisely, capturing key topics, decisions, and important details:\n"
+            + convo_text
+        )
+        try:
+            response = openai.chat.completions.create(
+                model="gpt-4o",
+                messages=[
+                    {"role": "system", "content": "You are a conversation summarizer."},
+                    {"role": "user", "content": prompt}
+                ],
+                max_tokens=150,
+                temperature=0.5
+            )
+            new_summary = response.choices[0].message.content.strip()
+            print("New conversation summary generated:", new_summary)
+            # Optionally, you can replace the conversation with just the summary
+            conversation = [{"role": "system", "content": "Conversation summary: " + new_summary}]
+            return conversation, new_summary
+        except Exception as e:
+            print(f"Error generating conversation summary: {e}")
+            return conversation, current_summary
+    return conversation, current_summary
 
 def generate_messages(student_info, conversation, conversation_summary):
     system_prompt = (
@@ -61,8 +99,8 @@ def generate_messages(student_info, conversation, conversation_summary):
 
 def generate_conversation_starters(student_info, conversation):
     system_prompt = (
-        "You are Athena, a friendly and supportive college counselor. Generate 4 conversation starters "
-        "the student might ask next to advance their college goals. Focus on the student's profile "
+        "You are Athena, a friendly and supportive college counselor. Generate 3 PERSONALIZED (using student info) conversation starters "
+        "the student might ask next to advance their college goals AND CONTINUE THE CONVERSATION!. Focus on the student's profile "
         "and their recent conversation. Output as a numbered list. "
         "Do not prefix with 'Athena:' – these are the student's potential questions."
     )
@@ -91,20 +129,20 @@ def generate_conversation_starters(student_info, conversation):
     ]
 
     response = openai.chat.completions.create(
-        model="gpt-4",
+        model="gpt-4o",
         messages=messages,
-        max_tokens=250,
+        max_tokens=300,
         temperature=0.7,
         n=1
     )
     text = response.choices[0].message.content.strip()
     starters = []
     for line in text.split('\n'):
-        line_stripped = line.strip()
-        if line_stripped[:2] in ("1.", "2.", "3.", "4."):
+        line_stripped = line.strip().strip('"')
+        if line_stripped[:2] in ("1.", "2.", "3."):
             question = line_stripped[line_stripped.find('.')+1:].strip()
             starters.append(question)
-    return starters[:4]
+    return starters[:3]
 
 def render_markdown(content):
     html_content = markdown2.markdown(content)
@@ -115,3 +153,82 @@ def render_markdown(content):
         strip=True
     )
     return clean_html
+
+def parse_new_student_info(
+    user_message: str,
+    current_student_data: dict,
+    conversation_summary: str
+) -> dict:
+    """
+    Uses GPT to extract new or updated student info from the user's latest message.
+    Also handles disclaimers or conflicting data. Returns a dict with:
+        {
+            "updates": { ...fields to update... },
+            "disclaimers": "...any disclaimers or conflicts..."
+        }
+    If no changes, returns: {"updates": {}, "disclaimers": ""}
+    """
+
+    system_prompt = """
+You are an expert system that parses updates to a student's profile based on a conversation summary and the user's latest message. 
+The student's current data is provided. The user may add or update fields like:
+- grade
+- future_study
+- deep_interest
+- current_extracurriculars
+- favorite_courses
+- competitions
+- notes
+- goals
+
+You must also detect disclaimers or conflicting info. For example:
+- "I used to be in Math Club but I'm no longer in it" => disclaimers: "User left Math Club."
+- "I might want to do pre-med, but I'm not sure yet." => disclaimers: "User is uncertain about future_study."
+
+Output ONLY valid JSON. The JSON should have two keys:
+  "updates": a JSON object of new or changed fields
+  "disclaimers": a string summarizing disclaimers or conflicting info
+
+If no changes are detected, return: {"updates": {}, "disclaimers": ""}
+
+Do not include extraneous text, just JSON.
+"""
+
+    user_prompt = f"""
+Conversation summary so far: {conversation_summary}
+
+Current student data: {json.dumps(current_student_data, ensure_ascii=False)}
+User's latest message: "{user_message}"
+
+Follow the system prompt. Output valid JSON only.
+"""
+
+    try:
+        response = openai.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt}
+            ],
+            max_tokens=300,
+            temperature=0.0
+        )
+
+        raw_json = response.choices[0].message.content.strip()
+        raw_json = raw_json[8:]
+        raw_json = raw_json[:len(raw_json) - 3]
+        parsed_data = json.loads(raw_json)  # parse GPT's JSON
+
+        # Must at least have "updates" and "disclaimers" keys
+        if not isinstance(parsed_data, dict):
+            return {"updates": {}, "disclaimers": ""}
+        if "updates" not in parsed_data:
+            parsed_data["updates"] = {}
+        if "disclaimers" not in parsed_data:
+            parsed_data["disclaimers"] = ""
+
+        return parsed_data
+
+    except Exception as e:
+        print(f"Error extracting student info: {e}")
+        return {"updates": {}, "disclaimers": ""}
