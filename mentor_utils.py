@@ -1,6 +1,7 @@
 import openai
 import numpy as np
 from db_utils import load_mentor_embeddings
+import re
 
 MENTOR_EMBEDDINGS = load_mentor_embeddings()
 
@@ -57,3 +58,43 @@ def generate_mentor_reason(mentor_id, user_message):
         temperature=0.7
     )
     return response.choices[0].message.content.strip()
+
+MENTOR_REQUEST_EXAMPLES = [
+    "Can you recommend a mentor?",
+    "Who would be a good mentor for me?",
+    "Suggest me a mentor for my interest in cooking",
+    "I need help finding a mentor",
+    "I want guidance from an expert",
+    "Which mentor do you suggest?",
+    "Who should mentor me?",
+    "Help me connect with a mentor in my field",
+]
+
+def get_text_embedding(text):
+    """Get OpenAI embedding vector for a given text."""
+    try:
+        response = openai.embeddings.create(
+            model="text-embedding-ada-002",
+            input=text
+        )
+        return np.array(response.data[0].embedding)
+    except Exception as e:
+        print(f"Error generating embedding: {e}")
+        return None
+
+def is_explicit_mentor_request(user_message):
+    """Compares user input to predefined mentor request examples using embeddings."""
+    user_embedding = get_text_embedding(user_message)
+    if user_embedding is None:
+        return False  # If embedding fails, fall back to default
+
+    threshold = 0.85  # Define similarity threshold
+
+    for example in MENTOR_REQUEST_EXAMPLES:
+        example_embedding = get_text_embedding(example)
+        if example_embedding is not None:
+            similarity = np.dot(user_embedding, example_embedding) / (np.linalg.norm(user_embedding) * np.linalg.norm(example_embedding))
+            if similarity >= threshold:
+                return True  # User message is likely a mentor request
+
+    return False  # Default to False if no match
