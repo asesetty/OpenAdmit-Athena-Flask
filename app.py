@@ -28,7 +28,7 @@ from mentor_utils import (
 from datetime import datetime  # For timestamp in topics summaries
 
 # Load secrets securely from environment variables
-openai.api_key = "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"
+openai.api_key = "Add here"
 SECRET_KEY = "ishaanjain"
 mentors = ["Aalaap", "Anjan", "Vishnu", "Ishaan", "Shairee", "Shivani", "Rohan", "Annmaria"]
 
