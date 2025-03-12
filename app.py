@@ -31,7 +31,7 @@ from mentor_utils import (
 # -------------------------------
 # CONFIGURATION & INITIALIZATION
 # -------------------------------
-openai.api_key = "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"
+openai.api_key = "ADD HERE"
 SECRET_KEY = "ishjainisafreak0715"
 
 app = Flask(__name__)
