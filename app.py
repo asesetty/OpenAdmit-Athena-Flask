@@ -32,7 +32,7 @@ from mentor_utils import (
 # CONFIGURATION & INITIALIZATION
 # -------------------------------
 openai.api_key = "ADD HERE"
-SECRET_KEY = "ishjainisafreak0715"
+SECRET_KEY = "test"
 
 app = Flask(__name__)
 app.secret_key = SECRET_KEY
